@@ -1,4 +1,10 @@
 import time
+import random
+
+memory = {}
+
+def get_state():
+    return "".join(board)
 
 print("Welcome to Tic-Tac-Toe!")
 
@@ -29,14 +35,48 @@ def turn():
             display()
             continue
 
-import random
 def ai():
-    while True:
-        pos = random.randint(1,9)
-        pos = pos - 1
-        if board[pos] != "X" and  board[pos] != "O":
-                board[pos] = aisym
-                return board, pos
+    global memory
+
+    avlpos = []
+    for i in range(0,9):
+        if board[i] != "X" and board[i] != "O":
+            avlpos.append(i)
+    
+    state = get_state()
+    if state in memory:
+        if mode != "y":
+            best_pos = max(avlpos, key=lambda pos: memory[state].get(pos, 0))
+            pos = best_pos
+        else:
+            if random.random() < 0.2:
+                pos = random.choice(avlpos)
+            else:
+                best_pos = max(avlpos, key=lambda pos: memory[state].get(pos, 0))
+                pos = best_pos
+    else:
+        pos = random.choice(avlpos)
+
+    board[pos] = aisym
+    if mode != "y":
+        return board, pos
+    else:
+        return board, pos, state
+
+def upd_memory():
+    global memory
+
+    if state not in memory:
+        memory[state] = {}
+    if pos not in memory[state]:
+        memory[state][pos] = 0
+
+    return memory
+
+def learn(history, reward):
+    for state, pos in history:
+        memory[state][pos] += reward
+    return memory
 
 def monitor():
     display()
@@ -53,16 +93,18 @@ def chk_win():
                 return True
             else:
                 if turnsym == "O":
+                    winner = "O"
                     wino += 1
                 else:
+                    winner = "X"
                     winx += 1
-                return True, wino, winx
+                return True, wino, winx, winner
             
     if mode != "y":
         return False
     else:
         wino, winx = wino, winx
-        return False, wino, winx
+        return False, wino, winx, ""
 
 def chk_draw():
     global drawc
@@ -79,80 +121,133 @@ def chk_draw():
             drawc = drawc
             return False, drawc
 
-mode = input("Continue with training mode<y/n>?")
-if mode != "y":
-    move = 0
-    print("AI will play with [X or O]?: ")
-    aisym = input("")
-    if aisym == "O":
-        playersym = "X"
-    else:
-        playersym = "O"
+def force():
+    global mode
+    mode = "y"
+    print("Forced to training mode!")
+    return mode
 
-    print("Who will play first?:")
-    print("1. You")
-    print("2. AI")
-    turn_choice = int(input(""))
-    if turn_choice == 1:
-        turn1 = True
-    else:
-        turn1 = False
+while True:
+    mode = input("Continue with training mode <y/n> ?: ")
+    #mode = force
 
-    while True:
-        move += 1
-        while turn1:
-            print(f"{playersym} turn")
-            turnsym = playersym
-            board = turn()
-            turn1 = False
-            turn2 = True
-        win = chk_win()
-        draw = chk_draw()
-        if win or draw:
-            break
-        move += 1
-        while turn2:
-            print(f"{aisym} turn")
-            turnsym = aisym
-            board, _ = ai()
-            display()
-            turn1 = True
-            turn2 = False
-        win = chk_win()
-        draw = chk_draw()
-        if win or draw:
-            break
-else:
-    games = int(input("Enter Number of games: "))
-    winx, wino, drawc = 0, 0, 0
-    for i in range(games):
+    if mode != "y":
         move = 0
-        sym1 = "O"
-        sym2 = "X"
-        turn1 = True
+        print("AI will play with [X or O]?: ")
+        aisym = input("")
+        if aisym == "O":
+            playersym = "X"
+        else:
+            playersym = "O"
+
+        print("Who will play first?:")
+        print("1. You")
+        print("2. AI")
+        turn_choice = int(input(""))
+        if turn_choice == 1:
+            turn1 = True
+        else:
+            turn1, turn2 = False, True
+
         while True:
+            move += 1
             while turn1:
-                aisym = sym1
-                turnsym = aisym
-                board, pos = ai()
-                turn1 = False
-                turn2 = True
-            win, wino, winx = chk_win()
-            move += 1
-            draw, drawc = chk_draw()
+                print(f"{playersym} turn")
+                turnsym = playersym
+                board = turn()
+                turn1, turn2 = False, True
+            win = chk_win()
+            if not win:
+                draw = chk_draw()
             if win or draw:
+                if draw:
+                    print("Draw!")
                 board = reset()
                 break
+            move += 1
             while turn2:
-                aisym = sym2
+                print(f"{aisym} turn")
                 turnsym = aisym
-                board, pos = ai()
-                turn1 = True
-                turn2 = False
-            win, wino, winx = chk_win()
-            move += 1
-            draw, drawc = chk_draw()
+                board, _ = ai()
+                display()
+                turn1, turn2 = True, False
+            win = chk_win()
+            if not win:
+                draw = chk_draw()
             if win or draw:
+                if draw:
+                    print("Draw!")
                 board = reset()
                 break
-    print(f"O won {wino} Times, X won {winx} Times, There were {drawc} Draws")
+        brk = input("Wanna Exit <y/n> ?: ")
+        if brk == "y":
+            break
+    else:
+        games = int(input("Enter Number of games: "))
+        winx, wino, drawc = 0, 0, 0
+
+        for i in range(games):
+            xhistory = []
+            ohistory = []
+
+            if random.random() < 0.5:
+                turn1 = True
+            else:
+                turn2, turn1 = True, False
+            move = 0
+
+            while True:
+                while turn1:
+                    aisym = "O"
+                    turnsym = aisym
+                    board, pos, state = ai()
+                    ohistory.append((state, pos))
+                    memory = upd_memory()
+                    turn1, turn2 = False, True
+                    
+                win, wino, winx, winner = chk_win()
+                move += 1
+
+                if not win:
+                    draw, drawc = chk_draw()
+                if draw:
+                    winner = "draw"
+                if win or draw:
+                    board = reset()
+                    break
+
+                while turn2:
+                    aisym = "X"
+                    turnsym = aisym
+                    board, pos, state = ai()
+                    xhistory.append((state, pos))
+                    memory = upd_memory()
+                    turn1, turn2 = True, False
+
+                win, wino, winx, winner = chk_win()
+                move += 1
+
+                if not win:
+                    draw, drawc = chk_draw()
+                if draw:
+                    winner = "draw"
+                if win or draw:
+                    board = reset()
+                    break
+
+            #print("winner:", winner)
+            #print("ohistory:", ohistory)
+            #print("xhistory:", xhistory)
+
+            if winner == "O":
+                memory = learn(ohistory, 1)
+                memory = learn(xhistory, -1)
+            elif winner == "X":
+                memory = learn(xhistory, 1)
+                memory = learn(ohistory, -1)
+            else:
+                memory = learn(ohistory, 0)
+                memory = learn(xhistory, 0)
+
+        print(f"O won {wino} Times, X won {winx} Times, There were {drawc} Draws")
+    print("Starting AI vs Player: ")
