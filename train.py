@@ -2,10 +2,13 @@ import time
 import random
 import json
 
-with open("training_data.json", "r") as file:
-    memory = json.load(file)
-for state in memory:
-    memory[state] = {int(pos): score for pos, score in memory[state].items()}
+try:
+    with open("training_data.json", "r") as file:
+        memory = json.load(file)
+    for state in memory:
+        memory[state] = {int(pos): score for pos, score in memory[state].items()}
+except FileNotFoundError:
+    memory = {}
 
 def get_state():
     return "".join(board)
@@ -135,14 +138,14 @@ while True:
     mode = input("Continue with training mode <y/n> ?: ")
 
     if mode != "y":
-        print("Starting Testing Mode... ")
-        for i in range(1,4):
-            time.sleep(1)
-            print(i)
         mode2 = input("Continue with testing <y/n> ?: ")
         if mode2 != "y":
             break
         else:
+            print("Starting Testing Mode... ")
+            for i in range(1,4):
+                time.sleep(1)
+                print(i)
             move = 0
             aisym = input("Choose a symbol for ai [X or O]: ")
             if aisym == "O":
@@ -256,10 +259,6 @@ while True:
                 memory = learn(xhistory, 0)
 
         print(f"O won {wino} Times, X won {winx} Times, There were {drawc} Draws")
-<<<<<<<< HEAD:tic-tac-toe.py
-    print("Starting AI vs Player: ")
-========
 
 with open("training_data.json", "w") as file:
     json.dump(memory, file, indent=4)
->>>>>>>> 25a085b (Amplified the train mode and added playing mode && The training data):train.py
