@@ -102,11 +102,12 @@ while True:
             turnsym = playersym
             board = turn()
             turn1, turn2 = False, True
-        move += 1
         win = chk_win()
         if not win:
+            move += 1
             draw = chk_draw()
         if win or draw:
+            display()
             if draw:
                 print("Draw!")
             board = reset()
@@ -117,11 +118,12 @@ while True:
             board, _ = ai()
             display()
             turn1, turn2 = True, False
-        move += 1
         win = chk_win()
         if not win:
+            move += 1
             draw = chk_draw()
         if win or draw:
+            display()
             if draw:
                 print("Draw!")
             board = reset()
