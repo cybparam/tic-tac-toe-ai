@@ -1,7 +1,11 @@
 import time
 import random
+import json
 
-memory = {}
+with open("training_data.json", "r") as file:
+    memory = json.load(file)
+for state in memory:
+    memory[state] = {int(pos): score for pos, score in memory[state].items()}
 
 def get_state():
     return "".join(board)
@@ -129,59 +133,65 @@ def force():
 
 while True:
     mode = input("Continue with training mode <y/n> ?: ")
-    #mode = force
 
     if mode != "y":
-        move = 0
-        print("AI will play with [X or O]?: ")
-        aisym = input("")
-        if aisym == "O":
-            playersym = "X"
-        else:
-            playersym = "O"
-
-        print("Who will play first?:")
-        print("1. You")
-        print("2. AI")
-        turn_choice = int(input(""))
-        if turn_choice == 1:
-            turn1 = True
-        else:
-            turn1, turn2 = False, True
-
-        while True:
-            move += 1
-            while turn1:
-                print(f"{playersym} turn")
-                turnsym = playersym
-                board = turn()
-                turn1, turn2 = False, True
-            win = chk_win()
-            if not win:
-                draw = chk_draw()
-            if win or draw:
-                if draw:
-                    print("Draw!")
-                board = reset()
-                break
-            move += 1
-            while turn2:
-                print(f"{aisym} turn")
-                turnsym = aisym
-                board, _ = ai()
-                display()
-                turn1, turn2 = True, False
-            win = chk_win()
-            if not win:
-                draw = chk_draw()
-            if win or draw:
-                if draw:
-                    print("Draw!")
-                board = reset()
-                break
-        brk = input("Wanna Exit <y/n> ?: ")
-        if brk == "y":
+        print("Starting Testing Mode... ")
+        for i in range(1,4):
+            time.sleep(1)
+            print(i)
+        mode2 = input("Continue with testing <y/n> ?: ")
+        if mode2 != "y":
             break
+        else:
+            move = 0
+            aisym = input("Choose a symbol for ai [X or O]: ")
+            if aisym == "O":
+                playersym = "X"
+            else:
+                playersym = "O"
+
+            print("Who will play first?:")
+            print("1. You")
+            print("2. AI")
+            turn_choice = int(input(""))
+            if turn_choice == 1:
+                turn1 = True
+            else:
+                turn1, turn2 = False, True
+
+            while True:
+                while turn1:
+                    print(f"{playersym} turn")
+                    turnsym = playersym
+                    board = turn()
+                    turn1, turn2 = False, True
+                move += 1
+                win = chk_win()
+                if not win:
+                    draw = chk_draw()
+                if win or draw:
+                    if draw:
+                        print("Draw!")
+                    board = reset()
+                    break
+                while turn2:
+                    print(f"{aisym} turn")
+                    turnsym = aisym
+                    board, _ = ai()
+                    display()
+                    turn1, turn2 = True, False
+                move += 1
+                win = chk_win()
+                if not win:
+                    draw = chk_draw()
+                if win or draw:
+                    if draw:
+                        print("Draw!")
+                    board = reset()
+                    break
+            brk = input("Wanna Exit The Game <y/n> ?: ")
+            if brk == "y":
+                break
     else:
         games = int(input("Enter Number of games: "))
         winx, wino, drawc = 0, 0, 0
@@ -235,10 +245,6 @@ while True:
                     board = reset()
                     break
 
-            #print("winner:", winner)
-            #print("ohistory:", ohistory)
-            #print("xhistory:", xhistory)
-
             if winner == "O":
                 memory = learn(ohistory, 1)
                 memory = learn(xhistory, -1)
@@ -250,4 +256,10 @@ while True:
                 memory = learn(xhistory, 0)
 
         print(f"O won {wino} Times, X won {winx} Times, There were {drawc} Draws")
+<<<<<<<< HEAD:tic-tac-toe.py
     print("Starting AI vs Player: ")
+========
+
+with open("training_data.json", "w") as file:
+    json.dump(memory, file, indent=4)
+>>>>>>>> 25a085b (Amplified the train mode and added playing mode && The training data):train.py
